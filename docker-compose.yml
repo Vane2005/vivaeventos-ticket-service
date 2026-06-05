@@ -1,0 +1,50 @@
+services:
+  ticket-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vivaeventos-ticket-service
+    ports:
+      - "8086:8086"
+    environment:
+      SERVER_PORT: 8086
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ticket-db:5432/ticket-db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-1234}
+      RABBITMQ_HOST: event-service-rabbitmq
+      RABBITMQ_PORT: 5672
+      SERVICES_ORDER_SERVICE_URL: http://order-service:8083
+    depends_on:
+      ticket-db:
+        condition: service_healthy
+    restart: always
+    networks:
+      - event-network
+
+  ticket-db:
+    image: postgres:15-alpine
+    container_name: vivaeventos-ticket-db
+    environment:
+      POSTGRES_DB: ticket-db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-1234}
+    ports:
+      - "5436:5432"
+    volumes:
+      - ticket-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ticket-db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    networks:
+      - event-network
+
+volumes:
+  ticket-db-data:
+
+networks:
+  event-network:
+    external: true
+    name: vivaeventos-event-service_event-network
