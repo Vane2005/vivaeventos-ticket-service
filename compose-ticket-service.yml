@@ -8,18 +8,14 @@ services:
       - "8086:8086"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ticket-db
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       SERVICES_ORDER_SERVICE_URL: http://172.20.0.1:8083
       SERVICES_EVENT_SERVICE_URL: http://172.20.0.1:8082
       JWT_SECRET: ${JWT_SECRET}
     depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      - postgres
+      - rabbitmq
     restart: always
 
   postgres:
@@ -28,33 +24,19 @@ services:
     restart: always
     environment:
       POSTGRES_DB: ticket-db
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
     ports:
       - "5436:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d ticket-db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+
 
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
     container_name: ticket-service-rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
     ports:
       - "5674:5672"
       - "15674:15672"
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: always
-
 volumes:
   postgres_data:
