@@ -19,4 +19,16 @@ class QrGeneratorServiceTest {
         assertNotNull(qr2);
         assertNotEquals(qr1, qr2);
     }
+
+    @Test
+    void shouldGenerateDifferentQrCodes() {
+        QrGeneratorService service = new QrGeneratorService();
+
+        String qr1 = service.generateQrContent();
+        String qr2 = service.generateQrContent();
+
+        assertNotNull(qr1);
+        assertNotNull(qr2);
+        assertNotEquals(qr1, qr2);
+    }
 }
